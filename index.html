@@ -595,6 +595,7 @@
 
   function update(p) {
     const val = parseInt(document.getElementById(p.slider).value);
+    localStorage.setItem(p.slider, val);
     document.getElementById(p.fill).style.width = val + '%';
     document.getElementById(p.score).textContent = val;
     document.getElementById(p.sum).textContent = val;
@@ -610,6 +611,8 @@
   }
 
   pairs.forEach(p => {
+    const saved = localStorage.getItem(p.slider);
+    if (saved !== null) document.getElementById(p.slider).value = saved;
     document.getElementById(p.slider).addEventListener('input', () => update(p));
     update(p);
   });
