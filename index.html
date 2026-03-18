@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Friendship Meter ✦</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
   :root {
     --bg: #0d0d12;
@@ -567,6 +569,19 @@
 </div>
 
 <script>
+  // Firebase setup
+  const firebaseConfig = {
+    apiKey: "AIzaSyDDNVx54mqN4C3RAVI6j8E3pMU2RPFMpGI",
+    authDomain: "friendshipmeter-e76e2.firebaseapp.com",
+    projectId: "friendshipmeter-e76e2",
+    storageBucket: "friendshipmeter-e76e2.firebasestorage.app",
+    messagingSenderId: "302053823975",
+    appId: "1:302053823975:web:e00756afebb97a09d5d942",
+    databaseURL: "https://friendshipmeter-e76e2-default-rtdb.firebaseio.com"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
   const pairs = [
     { slider: 'vl-slider', fill: 'vl-fill', score: 'vl-score', status: 'vl-status', sum: 'sum-vl', sbar: 'sbar-vl', semi: 'semi-vl', type: 'lilia' },
     { slider: 'vm-slider', fill: 'vm-fill', score: 'vm-score', status: 'vm-status', sum: 'sum-vm', sbar: 'sbar-vm', semi: 'semi-vm', type: 'memo' },
@@ -593,9 +608,10 @@
     return '👋';
   }
 
-  function update(p) {
-    const val = parseInt(document.getElementById(p.slider).value);
-    localStorage.setItem(p.slider, val);
+  function renderSlider(sliderId, val) {
+    const p = pairs.find(p => p.slider === sliderId);
+    if (!p) return;
+    document.getElementById(p.slider).value = val;
     document.getElementById(p.fill).style.width = val + '%';
     document.getElementById(p.score).textContent = val;
     document.getElementById(p.sum).textContent = val;
@@ -610,11 +626,18 @@
     drawRadar();
   }
 
+  // Listen for real-time changes from Firebase
   pairs.forEach(p => {
-    const saved = localStorage.getItem(p.slider);
-    if (saved !== null) document.getElementById(p.slider).value = saved;
-    document.getElementById(p.slider).addEventListener('input', () => update(p));
-    update(p);
+    db.ref('scores/' + p.slider).on('value', snapshot => {
+      const val = snapshot.val();
+      if (val !== null) renderSlider(p.slider, val);
+    });
+
+    // On drag: save to Firebase (all users see the update live)
+    document.getElementById(p.slider).addEventListener('input', () => {
+      const val = parseInt(document.getElementById(p.slider).value);
+      db.ref('scores/' + p.slider).set(val);
+    });
   });
 
   function drawRadar() {
@@ -658,17 +681,8 @@
       ctx.stroke();
     });
 
-    const vikaVals = [
-      parseInt(document.getElementById('vl-slider').value) / 100,
-      parseInt(document.getElementById('vm-slider').value) / 100,
-    ];
-    const mishaVals = [
-      parseInt(document.getElementById('ml-slider').value) / 100,
-      parseInt(document.getElementById('mm-slider').value) / 100,
-    ];
-
-    const polyVals = [vikaVals[0], vikaVals[1], mishaVals[1], mishaVals[0]];
-    const polyAngles = [angles[0], angles[1], angles[2], angles[3]];
+    const polyVals = ids.map(id => parseInt(document.getElementById(id).value) / 100);
+    const polyAngles = angles;
 
     ctx.beginPath();
     polyAngles.forEach((a, i) => {
