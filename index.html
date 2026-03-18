@@ -13,7 +13,7 @@
     --surface: #16161f;
     --border: #2a2a3a;
     --text: #ffffff;
-    --muted: #6b6880;
+    --muted: #a89fc0;
 
     --vika-color: #ff6eb4;
     --vika-glow: rgba(255,110,180,0.35);
@@ -410,7 +410,7 @@
   }
 
   canvas#radar {
-    max-width: 420px;
+    max-width: 500px;
     width: 100%;
   }
 </style>
@@ -564,7 +564,7 @@
 <div style="max-width:900px;width:100%;position:relative;z-index:1;margin-top:36px;">
   <div class="radar-label">✦ Friendship Constellation ✦</div>
   <div class="radar-wrap">
-    <canvas id="radar" width="420" height="420"></canvas>
+    <canvas id="radar" width="500" height="500"></canvas>
   </div>
 </div>
 
@@ -626,17 +626,39 @@
     drawRadar();
   }
 
+  // Track which sliders are actively being dragged
+  const dragging = {};
+
   // Listen for real-time changes from Firebase
   pairs.forEach(p => {
     db.ref('scores/' + p.slider).on('value', snapshot => {
       const val = snapshot.val();
-      if (val !== null) renderSlider(p.slider, val);
+      // Don't override the slider if this user is currently dragging it
+      if (val !== null && !dragging[p.slider]) renderSlider(p.slider, val);
     });
 
-    // On drag: save to Firebase (all users see the update live)
-    document.getElementById(p.slider).addEventListener('input', () => {
-      const val = parseInt(document.getElementById(p.slider).value);
+    const sliderEl = document.getElementById(p.slider);
+
+    // While dragging: update visuals locally only (no Firebase write yet)
+    sliderEl.addEventListener('input', () => {
+      dragging[p.slider] = true;
+      const val = parseInt(sliderEl.value);
+      renderSlider(p.slider, val);
+    });
+
+    // On release: write to Firebase once
+    sliderEl.addEventListener('change', () => {
+      const val = parseInt(sliderEl.value);
       db.ref('scores/' + p.slider).set(val);
+      // Small delay before accepting remote updates again
+      setTimeout(() => { dragging[p.slider] = false; }, 300);
+    });
+
+    // Also handle touch end for mobile
+    sliderEl.addEventListener('touchend', () => {
+      const val = parseInt(sliderEl.value);
+      db.ref('scores/' + p.slider).set(val);
+      setTimeout(() => { dragging[p.slider] = false; }, 300);
     });
   });
 
@@ -706,15 +728,22 @@
       ctx.fill();
     });
 
-    ctx.font = '500 12px DM Sans, sans-serif';
+    ctx.font = '500 13px DM Sans, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     angles.forEach((a, i) => {
-      const pad = 38;
+      const pad = 52;
       const x = cx + Math.cos(a) * (R + pad);
       const y = cy + Math.sin(a) * (R + pad);
-      ctx.fillStyle = 'rgba(255,255,255,0.75)';
-      ctx.fillText(labels[i], x, y);
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      // Split "Vika × Lilia" into two lines: "Vika ×" and "Lilia"
+      const parts = labels[i].split(' × ');
+      if (parts.length === 2) {
+        ctx.fillText(parts[0] + ' ×', x, y - 8);
+        ctx.fillText(parts[1], x, y + 8);
+      } else {
+        ctx.fillText(labels[i], x, y);
+      }
     });
   }
 
