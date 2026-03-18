@@ -12,7 +12,7 @@
     --bg: #0d0d12;
     --surface: #16161f;
     --border: #2a2a3a;
-    --text: #e8e4f0;
+    --text: #ffffff;
     --muted: #6b6880;
 
     --vika-color: #ff6eb4;
@@ -410,7 +410,7 @@
   }
 
   canvas#radar {
-    max-width: 320px;
+    max-width: 420px;
     width: 100%;
   }
 </style>
@@ -564,7 +564,7 @@
 <div style="max-width:900px;width:100%;position:relative;z-index:1;margin-top:36px;">
   <div class="radar-label">✦ Friendship Constellation ✦</div>
   <div class="radar-wrap">
-    <canvas id="radar" width="320" height="320"></canvas>
+    <canvas id="radar" width="420" height="420"></canvas>
   </div>
 </div>
 
@@ -645,7 +645,7 @@
     const ctx = canvas.getContext('2d');
     const size = canvas.width;
     const cx = size / 2, cy = size / 2;
-    const R = size * 0.38;
+    const R = size * 0.30;
     ctx.clearRect(0, 0, size, size);
 
     const labels = ['Vika × Lilia', 'Vika × Memo', 'Misha × Memo', 'Misha × Lilia'];
@@ -706,14 +706,14 @@
       ctx.fill();
     });
 
-    ctx.font = '500 11px DM Sans, sans-serif';
+    ctx.font = '500 12px DM Sans, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     angles.forEach((a, i) => {
-      const pad = 22;
+      const pad = 38;
       const x = cx + Math.cos(a) * (R + pad);
       const y = cy + Math.sin(a) * (R + pad);
-      ctx.fillStyle = 'rgba(200,190,220,0.7)';
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
       ctx.fillText(labels[i], x, y);
     });
   }
