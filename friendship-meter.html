@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friendship Meter ✦</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d12;
+    --surface: #16161f;
+    --border: #2a2a3a;
+    --text: #e8e4f0;
+    --muted: #6b6880;
+
+    --vika-color: #ff6eb4;
+    --vika-glow: rgba(255,110,180,0.35);
+    --misha-color: #5eb8ff;
+    --misha-glow: rgba(94,184,255,0.35);
+
+    --lilia-accent: #ffd86e;
+    --memo-accent: #7fffb2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 80px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.18) 0%, transparent 0%),
+      radial-gradient(1px 1px at 25% 55%, rgba(255,255,255,0.12) 0%, transparent 0%),
+      radial-gradient(1px 1px at 40% 15%, rgba(255,255,255,0.10) 0%, transparent 0%),
+      radial-gradient(1px 1px at 55% 75%, rgba(255,255,255,0.15) 0%, transparent 0%),
+      radial-gradient(1px 1px at 70% 35%, rgba(255,255,255,0.10) 0%, transparent 0%),
+      radial-gradient(1px 1px at 85% 65%, rgba(255,255,255,0.14) 0%, transparent 0%),
+      radial-gradient(1px 1px at 92% 12%, rgba(255,255,255,0.10) 0%, transparent 0%),
+      radial-gradient(1px 1px at 5% 85%, rgba(255,255,255,0.12) 0%, transparent 0%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 60px);
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff6eb4, #9b7cff, #5eb8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+  }
+
+  .subtitle {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 14px;
+    font-style: italic;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    max-width: 900px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 28px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover { transform: translateY(-2px); }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .card.vika::before { background: linear-gradient(90deg, var(--vika-color), transparent); }
+  .card.misha::before { background: linear-gradient(90deg, var(--misha-color), transparent); }
+
+  .card .blob {
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    top: -40px; right: -40px;
+    opacity: 0.07;
+    pointer-events: none;
+    filter: blur(50px);
+    transition: opacity 0.4s;
+  }
+
+  .card.vika .blob { background: var(--vika-color); }
+  .card.misha .blob { background: var(--misha-color); }
+  .card:hover .blob { opacity: 0.14; }
+
+  .person-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .vika .avatar { background: linear-gradient(135deg, #ff6eb4, #d04a8e); color: #fff; }
+  .misha .avatar { background: linear-gradient(135deg, #5eb8ff, #1a80d4); color: #fff; }
+
+  .person-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .vika .person-name { color: var(--vika-color); }
+  .misha .person-name { color: var(--misha-color); }
+
+  .person-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .friendship-row { margin-bottom: 22px; }
+
+  .row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+
+  .friend-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+
+  .friend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .lilia-dot { background: var(--lilia-accent); }
+  .memo-dot { background: var(--memo-accent); }
+
+  .score-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 48px;
+    text-align: right;
+    transition: color 0.3s;
+  }
+
+  .track-wrap {
+    position: relative;
+    height: 10px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    overflow: visible;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+
+  .track-fill {
+    height: 100%;
+    border-radius: 99px;
+    position: relative;
+    transition: width 0.05s ease;
+    pointer-events: none;
+  }
+
+  .lilia-fill { background: linear-gradient(90deg, #b88a00, var(--lilia-accent)); }
+  .memo-fill { background: linear-gradient(90deg, #00a854, var(--memo-accent)); }
+
+  .track-fill::after {
+    content: '♥';
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    filter: drop-shadow(0 0 4px currentColor);
+    animation: heartbeat 1.2s ease-in-out infinite;
+  }
+
+  .lilia-fill::after { color: var(--lilia-accent); }
+  .memo-fill::after { color: var(--memo-accent); }
+
+  @keyframes heartbeat {
+    0%, 100% { transform: translateY(-50%) scale(1); }
+    30% { transform: translateY(-50%) scale(1.35); }
+    60% { transform: translateY(-50%) scale(0.95); }
+  }
+
+  .slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 10px;
+    background: transparent;
+    cursor: pointer;
+    position: absolute;
+    top: 0; left: 0;
+    border-radius: 99px;
+    z-index: 2;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.3);
+    cursor: grab;
+    transition: box-shadow 0.2s, transform 0.15s;
+  }
+
+  .slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 18px rgba(255,255,255,0.4);
+  }
+
+  .slider::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.3);
+  }
+
+  .slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255,255,255,0.3);
+    cursor: grab;
+  }
+
+  .status-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .summary-wrap {
+    max-width: 900px;
+    width: 100%;
+    margin-top: 36px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .summary-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 14px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .summary-card:hover { transform: scale(1.03); }
+
+  .summary-pair {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .summary-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+
+  .summary-bar {
+    height: 4px;
+    border-radius: 99px;
+    margin-top: 10px;
+    transition: width 0.3s;
+  }
+
+  .summary-emoji {
+    font-size: 20px;
+    margin-top: 6px;
+  }
+
+  .radar-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 36px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .radar-label {
+    text-align: center;
+    margin-bottom: 14px;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-family: 'Playfair Display', serif;
+  }
+
+  canvas#radar {
+    max-width: 320px;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">✦ Friendship Observatory ✦</div>
+  <h1>The Bond Meter</h1>
+  <div class="subtitle">How close are we, really?</div>
+</header>
+
+<div class="grid">
+  <!-- Vika Card -->
+  <div class="card vika">
+    <div class="blob"></div>
+    <div class="person-header">
+      <div class="avatar">V</div>
+      <div>
+        <div class="person-name">Vika</div>
+        <div class="person-sub">Friendship levels</div>
+      </div>
+    </div>
+
+    <div class="friendship-row">
+      <div class="row-header">
+        <div class="friend-label">
+          <span class="friend-dot lilia-dot"></span>
+          with Lilia
+        </div>
+        <div class="score-display" id="vl-score" style="color: var(--lilia-accent)">72</div>
+      </div>
+      <div class="track-wrap">
+        <div class="track-fill lilia-fill" id="vl-fill" style="width:72%"></div>
+        <input type="range" class="slider" id="vl-slider" min="0" max="100" value="72">
+      </div>
+      <div class="status-line">
+        <span class="status-tag" id="vl-status"></span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="friendship-row">
+      <div class="row-header">
+        <div class="friend-label">
+          <span class="friend-dot memo-dot"></span>
+          with Memo
+        </div>
+        <div class="score-display" id="vm-score" style="color: var(--memo-accent)">55</div>
+      </div>
+      <div class="track-wrap">
+        <div class="track-fill memo-fill" id="vm-fill" style="width:55%"></div>
+        <input type="range" class="slider" id="vm-slider" min="0" max="100" value="55">
+      </div>
+      <div class="status-line">
+        <span class="status-tag" id="vm-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Misha Card -->
+  <div class="card misha">
+    <div class="blob"></div>
+    <div class="person-header">
+      <div class="avatar">M</div>
+      <div>
+        <div class="person-name">Misha</div>
+        <div class="person-sub">Friendship levels</div>
+      </div>
+    </div>
+
+    <div class="friendship-row">
+      <div class="row-header">
+        <div class="friend-label">
+          <span class="friend-dot lilia-dot"></span>
+          with Lilia
+        </div>
+        <div class="score-display" id="ml-score" style="color: var(--lilia-accent)">88</div>
+      </div>
+      <div class="track-wrap">
+        <div class="track-fill lilia-fill" id="ml-fill" style="width:88%"></div>
+        <input type="range" class="slider" id="ml-slider" min="0" max="100" value="88">
+      </div>
+      <div class="status-line">
+        <span class="status-tag" id="ml-status"></span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="friendship-row">
+      <div class="row-header">
+        <div class="friend-label">
+          <span class="friend-dot memo-dot"></span>
+          with Memo
+        </div>
+        <div class="score-display" id="mm-score" style="color: var(--memo-accent)">40</div>
+      </div>
+      <div class="track-wrap">
+        <div class="track-fill memo-fill" id="mm-fill" style="width:40%"></div>
+        <input type="range" class="slider" id="mm-slider" min="0" max="100" value="40">
+      </div>
+      <div class="status-line">
+        <span class="status-tag" id="mm-status"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-wrap">
+  <div class="summary-title">✦ At a Glance ✦</div>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-pair">Vika × Lilia</div>
+      <div class="summary-score" id="sum-vl" style="color:var(--lilia-accent)">72</div>
+      <div style="background:var(--border);border-radius:99px;height:4px;margin-top:10px;overflow:hidden">
+        <div class="summary-bar lilia-fill" id="sbar-vl" style="width:72%"></div>
+      </div>
+      <div class="summary-emoji" id="semi-vl">🌸</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-pair">Vika × Memo</div>
+      <div class="summary-score" id="sum-vm" style="color:var(--memo-accent)">55</div>
+      <div style="background:var(--border);border-radius:99px;height:4px;margin-top:10px;overflow:hidden">
+        <div class="summary-bar memo-fill" id="sbar-vm" style="width:55%"></div>
+      </div>
+      <div class="summary-emoji" id="semi-vm">🌿</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-pair">Misha × Lilia</div>
+      <div class="summary-score" id="sum-ml" style="color:var(--lilia-accent)">88</div>
+      <div style="background:var(--border);border-radius:99px;height:4px;margin-top:10px;overflow:hidden">
+        <div class="summary-bar lilia-fill" id="sbar-ml" style="width:88%"></div>
+      </div>
+      <div class="summary-emoji" id="semi-ml">💛</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-pair">Misha × Memo</div>
+      <div class="summary-score" id="sum-mm" style="color:var(--memo-accent)">40</div>
+      <div style="background:var(--border);border-radius:99px;height:4px;margin-top:10px;overflow:hidden">
+        <div class="summary-bar memo-fill" id="sbar-mm" style="width:40%"></div>
+      </div>
+      <div class="summary-emoji" id="semi-mm">🌱</div>
+    </div>
+  </div>
+</div>
+
+<!-- Radar -->
+<div style="max-width:900px;width:100%;position:relative;z-index:1;margin-top:36px;">
+  <div class="radar-label">✦ Friendship Constellation ✦</div>
+  <div class="radar-wrap">
+    <canvas id="radar" width="320" height="320"></canvas>
+  </div>
+</div>
+
+<script>
+  const pairs = [
+    { slider: 'vl-slider', fill: 'vl-fill', score: 'vl-score', status: 'vl-status', sum: 'sum-vl', sbar: 'sbar-vl', semi: 'semi-vl', type: 'lilia' },
+    { slider: 'vm-slider', fill: 'vm-fill', score: 'vm-score', status: 'vm-status', sum: 'sum-vm', sbar: 'sbar-vm', semi: 'semi-vm', type: 'memo' },
+    { slider: 'ml-slider', fill: 'ml-fill', score: 'ml-score', status: 'ml-status', sum: 'sum-ml', sbar: 'sbar-ml', semi: 'semi-ml', type: 'lilia' },
+    { slider: 'mm-slider', fill: 'mm-fill', score: 'mm-score', status: 'mm-status', sum: 'sum-mm', sbar: 'sbar-mm', semi: 'semi-mm', type: 'memo' },
+  ];
+
+  function getStatus(v) {
+    if (v >= 90) return { label: '✦ Soul Mates', color: '#d4a6ff', bg: 'rgba(212,166,255,0.12)' };
+    if (v >= 75) return { label: '★ Best Friends', color: '#ff9f5e', bg: 'rgba(255,159,94,0.12)' };
+    if (v >= 60) return { label: '♥ Close Friends', color: '#ff6eb4', bg: 'rgba(255,110,180,0.12)' };
+    if (v >= 45) return { label: '◈ Good Friends', color: '#5eb8ff', bg: 'rgba(94,184,255,0.12)' };
+    if (v >= 30) return { label: '◇ Acquaintances', color: '#7de8c5', bg: 'rgba(125,232,197,0.10)' };
+    if (v >= 15) return { label: '· Just Met', color: '#8888aa', bg: 'rgba(136,136,170,0.10)' };
+    return { label: '… Strangers', color: '#555566', bg: 'rgba(100,100,120,0.08)' };
+  }
+
+  function getEmoji(v) {
+    if (v >= 90) return '💫';
+    if (v >= 75) return '🔥';
+    if (v >= 60) return '💖';
+    if (v >= 45) return '😊';
+    if (v >= 30) return '🌱';
+    return '👋';
+  }
+
+  function update(p) {
+    const val = parseInt(document.getElementById(p.slider).value);
+    document.getElementById(p.fill).style.width = val + '%';
+    document.getElementById(p.score).textContent = val;
+    document.getElementById(p.sum).textContent = val;
+    document.getElementById(p.sbar).style.width = val + '%';
+    document.getElementById(p.semi).textContent = getEmoji(val);
+    const st = getStatus(val);
+    const el = document.getElementById(p.status);
+    el.textContent = st.label;
+    el.style.color = st.color;
+    el.style.background = st.bg;
+    el.style.border = `1px solid ${st.color}40`;
+    drawRadar();
+  }
+
+  pairs.forEach(p => {
+    document.getElementById(p.slider).addEventListener('input', () => update(p));
+    update(p);
+  });
+
+  function drawRadar() {
+    const canvas = document.getElementById('radar');
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    const cx = size / 2, cy = size / 2;
+    const R = size * 0.38;
+    ctx.clearRect(0, 0, size, size);
+
+    const labels = ['Vika × Lilia', 'Vika × Memo', 'Misha × Memo', 'Misha × Lilia'];
+    const ids = ['vl-slider', 'vm-slider', 'mm-slider', 'ml-slider'];
+    const colors = [
+      getComputedStyle(document.documentElement).getPropertyValue('--lilia-accent').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--memo-accent').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--memo-accent').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--lilia-accent').trim(),
+    ];
+    const n = 4;
+    const angles = labels.map((_, i) => (i / n) * Math.PI * 2 - Math.PI / 2);
+
+    for (let r = 0.25; r <= 1; r += 0.25) {
+      ctx.beginPath();
+      angles.forEach((a, i) => {
+        const x = cx + Math.cos(a) * R * r;
+        const y = cy + Math.sin(a) * R * r;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    angles.forEach(a => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    const vikaVals = [
+      parseInt(document.getElementById('vl-slider').value) / 100,
+      parseInt(document.getElementById('vm-slider').value) / 100,
+    ];
+    const mishaVals = [
+      parseInt(document.getElementById('ml-slider').value) / 100,
+      parseInt(document.getElementById('mm-slider').value) / 100,
+    ];
+
+    const polyVals = [vikaVals[0], vikaVals[1], mishaVals[1], mishaVals[0]];
+    const polyAngles = [angles[0], angles[1], angles[2], angles[3]];
+
+    ctx.beginPath();
+    polyAngles.forEach((a, i) => {
+      const x = cx + Math.cos(a) * R * polyVals[i];
+      const y = cy + Math.sin(a) * R * polyVals[i];
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(155,124,255,0.15)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(155,124,255,0.7)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    polyAngles.forEach((a, i) => {
+      const x = cx + Math.cos(a) * R * polyVals[i];
+      const y = cy + Math.sin(a) * R * polyVals[i];
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = colors[i];
+      ctx.fill();
+    });
+
+    ctx.font = '500 11px DM Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    angles.forEach((a, i) => {
+      const pad = 22;
+      const x = cx + Math.cos(a) * (R + pad);
+      const y = cy + Math.sin(a) * (R + pad);
+      ctx.fillStyle = 'rgba(200,190,220,0.7)';
+      ctx.fillText(labels[i], x, y);
+    });
+  }
+
+  drawRadar();
+</script>
+</body>
+</html>
